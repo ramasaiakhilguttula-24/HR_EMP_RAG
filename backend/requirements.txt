@@ -8,6 +8,7 @@ pydantic-settings>=2.2
 qdrant-client>=1.9
 redis>=5.0
 httpx>=0.27
+python-multipart>=0.0.18
 # Auth (Feature 3, pinned now to keep foundation stable)
 python-jose[cryptography]>=3.3
 passlib[bcrypt]>=1.7

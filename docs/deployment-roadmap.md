@@ -97,6 +97,17 @@ logs, domains, CI gates. No cloud networking knowledge required.
 3. F17 eval resume (me, background) — gates protect both tracks.
 4. Track B (you + me, when you want the deep end).
 
+## F19-prep checklist (done 2026-09-22)
+- [x] Multi-stage Dockerfiles (builder → slim non-root runtime) for backend/worker/frontend
+- [x] `.dockerignore` in backend/, frontend/, root — **never bake `.env` into images**
+  (the old `COPY . .` without ignores would have shipped real API keys inside every image)
+- [x] Worker builds from repo root (`COPY backend/…` fails from `./worker` context)
+- [x] Frontend `NEXT_PUBLIC_API_URL` as build-arg (baked at build time) + `output: standalone`
+- [x] HEALTHCHECK on app images hitting `/health` and `/login`
+- [x] Proof procedure per image: `docker build` → boot container → `GET /health` 200
+- [ ] DB init at deploy (alembic versions empty — run `scripts/init_db.py` as deploy step)
+- [ ] nginx service + compose healthchecks (prod compose)
+
 ## Costs & warnings
 - Railway: trial credit first; hobby usage roughly a coffee per month. Set spend limits.
 - AWS: create the **billing alarm before anything else**; idle RDS/ALB cost money even

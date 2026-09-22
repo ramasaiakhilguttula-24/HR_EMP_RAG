@@ -151,7 +151,9 @@ decision still needed: Railway (fast) vs AWS (full plan).
   all covered by UI, backend 160/160, `pool_pre_ping` fix from user testing. F19 punchlist:
   multi-stage Dockerfiles, worker build-context fix, frontend API-URL build-arg, nginx
   service, compose healthchecks, DB init at deploy (alembic empty — `init_db.py` is real path).
-- 2026-09-19: created; F1–F3 marked DONE; 21/21 tests recorded.
+- 2026-09-22: backend image PROVEN (832MB): built, booted, /health ok, /ready all up.
+  Proof caught missing `python-multipart` (worked locally via transitive dep) — now pinned.
+  Test container removed after proof.
 - 2026-09-21: Docker setup DONE (3 containers up, ports 5433/6380 remapped, tables +
   Qdrant collection created, /ready = ready). Added `scripts/init_db.py`.
 - 2026-09-21: F4 DONE, 45/45 pass. Groq key verified (LLM-only, no embeddings).

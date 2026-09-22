@@ -1,0 +1,7 @@
+# Never bake secrets or junk into images
+.env
+.env.local
+node_modules/
+.next/
+.git/
+*.log
