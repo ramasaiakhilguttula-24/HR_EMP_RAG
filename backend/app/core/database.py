@@ -6,8 +6,9 @@ from backend.app.core.config import get_settings
 
 settings = get_settings()
 
+_connect_args = {"ssl": "require"} if settings.POSTGRES_SSL else {}
 engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True,
-                              pool_pre_ping=True)
+                             pool_pre_ping=True, connect_args=_connect_args)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
