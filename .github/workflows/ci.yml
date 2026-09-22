@@ -1,0 +1,33 @@
+name: ci
+on:
+  push:
+    branches: [develop]
+  pull_request:
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r backend/requirements.txt
+      - run: python -m pytest backend/tests -v
+      # Phase 6: add Ruff, Bandit here
+  eval-gate:
+    runs-on: ubuntu-latest
+    needs: lint-test
+    # Only runs when API keys are configured as repo secrets.
+    if: vars.EVAL_ENABLED == 'true'
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r backend/requirements.txt
+      - run: python evaluation/run_evaluation.py --samples 6
+        # exit 1 on gate failure -> blocks the PR

@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-glow-1: rgba(99, 102, 241, 0.16);
+  --bg-glow-2: rgba(217, 70, 239, 0.12);
+}
+
+.dark {
+  --bg-glow-1: rgba(99, 102, 241, 0.22);
+  --bg-glow-2: rgba(217, 70, 239, 0.16);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* ambient gradient backdrop */
+.app-aurora::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(42rem 22rem at 12% -6%, var(--bg-glow-1), transparent 60%),
+    radial-gradient(36rem 20rem at 88% 4%, var(--bg-glow-2), transparent 60%),
+    radial-gradient(30rem 30rem at 50% 110%, rgba(56, 189, 248, 0.08), transparent 60%);
+}
+
+/* slim scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.5) transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-400/50 dark:bg-slate-600/60;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* streaming caret */
+.stream-caret::after {
+  content: "▍";
+  @apply text-brand-500 dark:text-brand-400;
+  animation: blink 1s step-end infinite;
+}
+
+/* chat markdown-ish */
+.prose-chat p {
+  @apply mb-2 last:mb-0 leading-relaxed;
+}
+.prose-chat strong {
+  @apply font-semibold text-slate-900 dark:text-white;
+}
+
+/* focus visibility (a11y) */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
+}

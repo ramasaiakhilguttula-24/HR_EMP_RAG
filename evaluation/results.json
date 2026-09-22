@@ -1,0 +1,6 @@
+[
+  {"id": "leave-01", "faithfulness": 1.0, "answer_relevancy": 0.86, "context_precision": 1.0, "context_recall": 1.0, "answer_correctness": 1.0},
+  {"id": "leave-02", "faithfulness": 1.0, "answer_relevancy": 0.75, "context_precision": 1.0, "context_recall": 1.0, "answer_correctness": 1.0},
+  {"id": "leave-03", "faithfulness": 1.0, "answer_relevancy": 0.88, "context_precision": 1.0, "context_recall": 1.0, "answer_correctness": 1.0},
+  {"id": "leave-04", "faithfulness": 1.0, "answer_relevancy": 0.87, "context_precision": 1.0, "context_recall": 1.0, "answer_correctness": 1.0}
+]

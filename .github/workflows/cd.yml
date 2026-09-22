@@ -1,0 +1,10 @@
+name: cd
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Phase 6: blue-green deploy to ECS goes here"
