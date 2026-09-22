@@ -7,7 +7,8 @@ from backend.app.core.config import get_settings
 
 def get_qdrant_client() -> QdrantClient:
     settings = get_settings()
-    return QdrantClient(url=settings.QDRANT_URL, timeout=10)
+    return QdrantClient(url=settings.QDRANT_URL,
+                        api_key=settings.QDRANT_API_KEY or None, timeout=10)
 
 
 def ensure_collection(client: QdrantClient | None = None) -> str:

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Databases
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/hr_rag"
     QDRANT_URL: str = "http://localhost:6333"
+    QDRANT_API_KEY: str = ""
     QDRANT_COLLECTION: str = "hr_policies"
     REDIS_URL: str = "redis://localhost:6379/0"
 
