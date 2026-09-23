@@ -13,7 +13,6 @@ FROM node:20-alpine
 WORKDIR /app
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
 RUN adduser -D appuser && chown -R appuser /app
 USER appuser
 EXPOSE 3000
