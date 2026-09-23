@@ -12,6 +12,8 @@ python-multipart>=0.0.18
 # Auth (Feature 3, pinned now to keep foundation stable)
 python-jose[cryptography]>=3.3
 passlib[bcrypt]>=1.7
+# Pinned: passlib 1.7.4 crashes with bcrypt>=5 (72-byte wrap detection). 4.x works.
+bcrypt==4.0.1
 email-validator>=2.0
 # Ingestion (Feature 4)
 pypdf>=4.0
