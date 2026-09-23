@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, api } from "./api";
+import { User, api, setTokens } from "./api";
 
 interface AuthCtx {
   user: User | null;
@@ -25,7 +25,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const t = localStorage.getItem("hr-token");
+      const r = localStorage.getItem("hr-refresh");
       const u = localStorage.getItem("hr-user");
+      setTokens(t, r);
       if (t && u) {
         setToken(t);
         setUser(JSON.parse(u));
@@ -36,9 +38,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  const persist = (t: string, u: User) => {
+  const persist = (t: string, r: string, u: User) => {
     localStorage.setItem("hr-token", t);
+    localStorage.setItem("hr-refresh", r);
     localStorage.setItem("hr-user", JSON.stringify(u));
+    setTokens(t, r);
     setToken(t);
     setUser(u);
   };
@@ -57,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         department: null,
         location: null,
       };
-      persist(pair.access_token, me);
+      persist(pair.access_token, pair.refresh_token, me);
       router.push(me.role === "employee" ? "/chat" : "/chat");
     },
     [router],
@@ -78,7 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       /* logout is best-effort */
     }
     localStorage.removeItem("hr-token");
+    localStorage.removeItem("hr-refresh");
     localStorage.removeItem("hr-user");
+    setTokens(null, null);
     setToken(null);
     setUser(null);
     router.push("/login");

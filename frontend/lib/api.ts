@@ -62,18 +62,45 @@ export interface Overview {
 }
 
 async function request<T>(path: string, token: string | null, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => res.statusText);
-    throw new ApiError(res.status, detail);
+  const doFetch = (t: string | null) =>
+    fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+        ...(init?.headers ?? {}),
+      },
+    });
+  const readError = async (res: Response): Promise<string> => {
+    try {
+      const text = await res.text();
+      try {
+        const parsed = JSON.parse(text) as { detail?: string };
+        return parsed.detail ?? text;
+      } catch {
+        return text;
+      }
+    } catch {
+      return res.statusText;
+    }
+  };
+  let res = await doFetch(token ?? getAccessToken());
+  if (res.status === 401 && !path.startsWith("/api/v1/auth/")) {
+    try {
+      res = await doFetch(await refreshAccess());
+    } catch {
+      /* refresh failed — report the original 401 below */
+      const first = await doFetch(token ?? getAccessToken());
+      if (!first.ok) throw new ApiError(first.status, await readError(first));
+      return first.json() as Promise<T>;
+    }
+    if (res.status === 401) {
+      const first = await doFetch(token ?? getAccessToken());
+      if (!first.ok) throw new ApiError(first.status, await readError(first));
+      return first.json() as Promise<T>;
+    }
   }
+  if (!res.ok) throw new ApiError(res.status, await readError(res));
   return res.json() as Promise<T>;
 }
 
@@ -83,6 +110,66 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+/* Token store + silent refresh: one 401 triggers rotation, then a single retry. */
+let _access: string | null = null;
+let _refresh: string | null = null;
+let _refreshing: Promise<string> | null = null;
+
+export function setTokens(access: string | null, refresh: string | null) {
+  _access = access;
+  _refresh = refresh;
+}
+
+export function getAccessToken(): string | null {
+  return _access;
+}
+
+async function refreshAccess(): Promise<string> {
+  if (!_refreshing) {
+    _refreshing = (async () => {
+      if (!_refresh) throw new ApiError(401, "No refresh token");
+      const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: _refresh }),
+      });
+      if (!res.ok) throw new ApiError(res.status, await res.text());
+      const pair = (await res.json()) as TokenPair;
+      _access = pair.access_token;
+      _refresh = pair.refresh_token;
+      try {
+        localStorage.setItem("hr-token", pair.access_token);
+        localStorage.setItem("hr-refresh", pair.refresh_token);
+      } catch {
+        /* private mode — session-only */
+      }
+      return pair.access_token;
+    })();
+    void _refreshing.finally(() => {
+      _refreshing = null;
+    });
+  }
+  return _refreshing;
+}
+
+/** Raw fetch with silent refresh (for streams + uploads that bypass request()). */
+export async function fetchWithAuth(path: string, init?: RequestInit): Promise<Response> {
+  const withAuth = (t: string | null) => {
+    const headers = new Headers(init?.headers);
+    if (t) headers.set("Authorization", `Bearer ${t}`);
+    return fetch(`${API_BASE}${path}`, { ...init, headers });
+  };
+  let res = await withAuth(getAccessToken());
+  if (res.status === 401) {
+    try {
+      res = await withAuth(await refreshAccess());
+    } catch {
+      /* refresh failed — caller sees the 401 */
+    }
+  }
+  return res;
 }
 
 export const api = {
@@ -120,9 +207,8 @@ export const api = {
     const form = new FormData();
     form.append("file", file);
     onProgress?.(10);
-    const res = await fetch(`${API_BASE}/api/v1/documents/upload?${params}`, {
+    const res = await fetchWithAuth(`/api/v1/documents/upload?${params}`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
       body: form,
     });
     onProgress?.(90);
@@ -144,9 +230,9 @@ export const api = {
     onEvent: (ev: StreamEvent) => void,
     signal?: AbortSignal,
   ): Promise<void> => {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetchWithAuth(path, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
       signal,
     });
