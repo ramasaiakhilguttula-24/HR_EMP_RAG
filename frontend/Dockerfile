@@ -16,6 +16,11 @@ COPY --from=builder /app/.next/static ./.next/static
 RUN adduser -D appuser && chown -R appuser /app
 USER appuser
 EXPOSE 10000
+
+ENV PORT=10000
+ENV HOSTNAME=0.0.0.0
+
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost:${PORT:-10000}/login || exit 1
+  CMD wget -q -O /dev/null http://localhost:10000/login || exit 1
+
 CMD ["node", "server.js"]
