@@ -1,4 +1,7 @@
 """FastAPI application factory. Entry point: `uvicorn backend.main:app`."""
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,9 +12,21 @@ from backend.app.core.config import get_settings
 from backend.app.models import document, query_log, user  # noqa: F401
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):  # noqa: ARG001 - required lifespan signature
+    """Ensure the vector collection + payload indexes exist (self-healing deploys)."""
+    try:
+        from backend.app.core.qdrant import ensure_collection
+
+        await asyncio.to_thread(ensure_collection)
+    except Exception as e:  # noqa: BLE001 - boot must never fail on index setup
+        print(f"WARNING: Qdrant setup skipped: {type(e).__name__}")
+    yield
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title=settings.APP_NAME, version="0.1.0")
+    app = FastAPI(title=settings.APP_NAME, version="0.1.0", lifespan=lifespan)
 
     # Browser frontend (F18) calls the API cross-origin in dev.
     app.add_middleware(
